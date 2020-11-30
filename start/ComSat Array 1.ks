@@ -62,6 +62,7 @@ if ship:status = "FLYING" or ship:status = "SUB_ORBITAL" {
 
 if ship:status = "ORBITING" and ship:body:name = "Kerbin" and ship:altitude < 350000{
 	if destination <> "Kerbin"{
+		set target to destination.
 		run transfer_alt(50000,350000).
 	}
 	

@@ -6,4 +6,4 @@
 
 set minperi to (target:atm:height + (target:radius * 0.3)).
 
-run transfer_alt.
+run transfer_alt(minperi).
