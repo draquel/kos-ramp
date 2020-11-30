@@ -8,5 +8,4 @@ test.ks
 *.ksm
 
 # Missions files
-start/*
 routes/*
