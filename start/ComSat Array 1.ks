@@ -103,6 +103,10 @@ if ship:status = "ORBITING" and ship:body:name = "Kerbin" and ship:altitude < 35
 		
 		run node({ run node_apo(350000). }).
 	}
+	
+	if obt:inclination > 1{
+		run node({ run node_inc(0). }).
+	}
 }
 
 if ship:status = "ORBITING" and ship:body:name = destination and probeCount > 0{
