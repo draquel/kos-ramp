@@ -1,6 +1,6 @@
 run once lib_ui.
 
-set commCommands to list("closeComms","targetShip","targetPort").
+set commCommands to list("closeComms","targetShip","targetPort","updateTag").
 set commStatus to true.
 
 when not ship:messages:empty then {
@@ -64,6 +64,14 @@ when not ship:messages:empty then {
 			if not shipFound{
 				errors:add("Vessel '"+ argument[ship] +"' not found").
 			}
+		}
+		if command = "updateTag"{
+			set current to arguments[0].
+			set new to arguments[1].
+			set taggedParts to ship:partstagged(current).
+			for p in taggedParts{
+				set p:tag to new.
+			}			
 		}
 		if command = "closeComms"{
 			uiConsole("comms","Comm Listener disabled.").
