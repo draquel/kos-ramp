@@ -9,7 +9,7 @@ set data to lexicon().
 data:add("command",command).
 data:add("arguments",arguments).
 
-if not recipient:istype("Vessel") and recipient:istype("String"){
+if recipient:istype("String"){
 	List Targets in validRecipients.
 	set found to false.
 	for v in validRecipients{
@@ -22,11 +22,11 @@ if not recipient:istype("Vessel") and recipient:istype("String"){
 	if not found{
 		uiError("comm","Vessel, '"+recipient+"', cant be found").
 	}
-}else{
-	uiError("comm","Recipient is not of type VESSEL").
 }
 
-if recipient:connection:isconnected{
+if not recipient:istype("Vessel") {
+	uiError("comm","Recipient is not VESSEL").
+}else if recipient:connection:isconnected{
 	recipient:connection:sendmessage(data).
 	
 	wait 0.
