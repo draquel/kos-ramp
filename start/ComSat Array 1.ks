@@ -6,57 +6,44 @@ run once lib_parts.
 declare function deployprobe{
 	declare parameter probeI.
 	declare parameter destination.
+	
+	set satName to "ComSat "+probeI.
+	set tagName to satName:replace(" ","").
 
 	run warp(eta:apoapsis - 60).
 	
-	partsDoEvent("KosProcessor","Toggle Power","ComSat"+probeI).
+	partsDoEvent("KosProcessor","Toggle Power",tagName).
 	
 	lock steering to prograde.
 	wait until utilIsShipFacing(prograde).
 	wait 1.
 	stage.
 	
-	set v to vessel("ComSat "+probeI).
-	set v:shipname to destination+" ComSat "+probeI.
+	set v to vessel(satName).
+	set v:shipname to destination+" "+satName.
 
-	
-	run comm_command(v,"updateTag",list("ComSat"+probeI,destination+"ComSat"+probeI)).
+	run comm_command(v,"updateTag",list("ComSat"+probeI,destination+tagName)).
 	run comm_command(v,"circ").
 	wait 0.
 	
-	if(eta:apoapsis < 120){
+	if(eta:apoapsis < eta:periapsis){
 		run warp(eta:apoapsis + 60).
 	}
 }
 
 set probeCount to ship:modulesnamed("KosProcessor"):length - 1.
 set destinationIndex to Lexicon("1","Kerbin","2","Mun","3","Minmus").
-
-//Display destination index & Handle user input
-set dKeys to destinationIndex:keys.
-print ("Destination Index:").
-for k in dkeys{
-	print(k+" - "+destinationIndex[k]).
-}
-print ("Enter destination number").
-wait until terminal:input:haschar. 
-
-set di to terminal:input:getchar.
-if destinationIndex:haskey(di){
-	set destination to destinationIndex[di].
-}else{
-	reboot.
-}
+set destination to destinationIndex[uiTerminalMenu(destinationIndex)].
 
 if ship:status = "PRELAUNCH" {
-	//Turn Off ComSat KosProcessors
+	//Turn Off ComSat KosProcessors - Needed to avoid interferance between multiple comm_listen instances.
 	from {local x is probeCount.} until x = 0 step{ set x to x-1.} do{
 		partsDoEvent("KosProcessor","Toggle Power","ComSat"+x).
 	}
 
 	//Countdown and Liftoff
-	set launchCount to 3.
 	print("Deploying ComSat Array to "+destination+". Launching...").
+	set launchCount to 3.
 	until launchCount = 0{
 		print(launchCount+"...").
 		set launchCount to launchCount - 1.
@@ -75,33 +62,7 @@ if ship:status = "FLYING" or ship:status = "SUB_ORBITAL" {
 
 if ship:status = "ORBITING" and ship:body:name = "Kerbin" and ship:altitude < 350000{
 	if destination <> "Kerbin"{
-		set target to destination.
-		
-		local ri is abs(obt:inclination - target:obt:inclination).
-
-		if ri > 0.25 {
-			uiBanner("Transfer", "Align planes with " + target:name).
-			run node_inc_tgt.
-			run node.
-		}
-		uiBanner("Transfer", "Transfer injection burn").
-		run node({run node_hoh.}).
-
-		until obt:transition <> "ENCOUNTER" {
-			run warp(eta:transition + 1).
-		}
-		
-		set minperi to 50000.
-		if ship:periapsis < minperi or ship:obt:inclination > 90 {
-			lock steering to heading(90, 0).
-			wait until utilIsShipFacing(heading(90, 0)).
-			wait 2.
-			lock throttle to 1.
-			wait until ship:periapsis > minperi.
-			lock throttle to 0.
-		}
-		
-		run node({ run node_apo(350000). }).
+		run transfer_alt(50000,350000).
 	}
 	
 	if obt:inclination > 1{
