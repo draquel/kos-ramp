@@ -32,7 +32,7 @@ until obt:transition <> "ENCOUNTER" {
 }
 
 // Deal with collisions and retrograde orbits (sorry this script can't do free return)
-local minperi is (body:atm:height + (body:radius * 0.3)).
+//local minperi is (body:atm:height + (body:radius * 0.3)).
 
 if ship:periapsis < minperi or ship:obt:inclination > 90 {
 	sas off.
