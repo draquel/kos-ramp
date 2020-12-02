@@ -292,3 +292,21 @@ function uiMSTOKMH {
 	parameter MS.
 	return MS * 3.6.
 }
+
+function uiCountdown {
+	parameter count
+	parameter msg.
+	parameter beep is true.
+	
+	print msg+" in:".
+	wait .5.
+	until count = 0{
+		if beep{
+			uiBeep().
+		}
+		print(count+"...").
+		set count to count - 1.
+		wait 1.
+	}
+	print "..."+msg.
+}
