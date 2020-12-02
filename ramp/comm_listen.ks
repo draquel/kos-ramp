@@ -1,3 +1,9 @@
+/////////////////////////////////////////////////////////////////////////////
+// Listen for Commands sent using ship to ship communication
+/////////////////////////////////////////////////////////////////////////////
+// Execute commands sent from other ships using the comm_command script.
+/////////////////////////////////////////////////////////////////////////////
+
 run once lib_ui.
 
 set commCommands to list("closeComms","targetShip","targetPort","updateTag").
@@ -8,6 +14,7 @@ when not ship:messages:empty then {
 	set recieved to ship:messages:pop.
 	set command to recieved:content["command"].
 	set arguments to recieved:content["arguments"].
+	set options to recieved:content["options"].
 	set isRampCommand to core:volume:exists(command+".ks").
 	set isCommCommand to commCommands:contains(command).
 	set errors to list().
@@ -81,20 +88,23 @@ when not ship:messages:empty then {
 		errors:add("Invalid command '"+command+"'").
 	}
 	
-	set response to lexicon("success",0,"message","").
-	if errors:length > 0{
-		set response["message"] to errors[0].
-		uiError("comms","Error: "+response["message"]).
-	}else{
-		set response["success"] to 1.
-		set response["message"] to "Command "+ command +" executed".
+	if(options:waitForReply){
+		set response to lexicon("success",0,"message","").
+		if errors:length > 0{
+			set response["message"] to errors[0].
+			uiError("comms","Error: "+response["message"]).
+		}else{
+			set response["success"] to 1.
+			set response["message"] to "Command "+ command +" executed".
+		}
+		if recieved:hassender{
+			recieved:sender:connection:sendMessage(response).		
+		}else{
+			uiError("comm","connection to sender lost.").
+		}
 	}
-	if recieved:hassender{
-		recieved:sender:connection:sendMessage(response).
-		wait 0.
+	if(options:switchTo and options:switchFrom){
 		set kuniverse:activevessel to recieved:sender.
-	}else{
-		uiError("comm","connection to sender lost.").
 	}
 
 	preserve.
