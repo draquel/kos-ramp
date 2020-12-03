@@ -1,8 +1,22 @@
+/////////////////////////////////////////////////////////////////////////////
+// ComSat Array 1 
+/////////////////////////////////////////////////////////////////////////////
+// Deploy a 3 sat array in an equidistant orbit around Kerbin, Mun or Minmus.
+// The satelites support communications in Kerbin SOI
+/////////////////////////////////////////////////////////////////////////////
+
 run once lib_ui.
 run once lib_util.
 run once lib_parts.
 
-//Function to deploy probes, set the probe name and circularize it's orbit.
+set probeCount to ship:modulesnamed("KosProcessor"):length - 1.
+set destinationIndex to Lexicon("1","Kerbin","2","Mun","3","Minmus").
+set destination to destinationIndex[uiTerminalMenu(destinationIndex)].
+
+/////////////////////////////////////////////////////////////////////////////
+// Function deployprobes
+// Turns on the probe, deploys, sets the probe name and circularizes.
+/////////////////////////////////////////////////////////////////////////////
 declare function deployprobe{
 	declare parameter probeI.
 	declare parameter destination.
@@ -31,35 +45,29 @@ declare function deployprobe{
 	}
 }
 
-set probeCount to ship:modulesnamed("KosProcessor"):length - 1.
-set destinationIndex to Lexicon("1","Kerbin","2","Mun","3","Minmus").
-set destination to destinationIndex[uiTerminalMenu(destinationIndex)].
-
+//Disable probes and liftoff
 if ship:status = "PRELAUNCH" {
 	//Turn Off ComSat KosProcessors - Needed to avoid interferance between multiple comm_listen instances.
 	from {local x is probeCount.} until x = 0 step{ set x to x-1.} do{
 		partsDoEvent("KosProcessor","Toggle Power","ComSat"+x).
 	}
 
-	//Countdown and Liftoff
-	print("Deploying ComSat Array to "+destination+". Launching...").
-	set launchCount to 3.
-	until launchCount = 0{
-		print(launchCount+"...").
-		set launchCount to launchCount - 1.
-		wait 1.
-	}
-	print "...Liftoff!".
+	//Countdown
+	print("Deploying ComSat Array to "+destination+".").
+	uiCountdown(3,"Liftoff").
 
+	//Liftoff
 	set ship:control:pilotmainthrottle to 1.
 	stage.
 	wait 2.
 }
 
+//Launch to 300km orbit
 if ship:status = "FLYING" or ship:status = "SUB_ORBITAL" {
 	run launch_asc(300000).
 }
 
+//Transfer to destination soi and set inclination to 0
 if ship:status = "ORBITING" and ship:body:name = "Kerbin" and ship:altitude < 350000{
 	if destination <> "Kerbin"{
 		set target to destination.
@@ -71,6 +79,7 @@ if ship:status = "ORBITING" and ship:body:name = "Kerbin" and ship:altitude < 35
 	}
 }
 
+//Move into resonant orbit and deploy probes
 if ship:status = "ORBITING" and ship:body:name = destination and probeCount > 0{
 	if destination = "Kerbin"{
 		if apoapsis < 1248000 or apoapsis > 1252000{
@@ -106,6 +115,7 @@ if ship:status = "ORBITING" and ship:body:name = destination and probeCount > 0{
 	}
 }
 
+//Deorbit launch vehicle and set last probe to active
 if probeCount = 0{
 	lock steering to retrograde.
 	wait until utilIsShipFacing(retrograde).
